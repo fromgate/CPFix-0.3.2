@@ -23,6 +23,7 @@
 package fromgate.cpfix;
 
 import java.io.BufferedReader;
+import sun.misc.SharedSecrets;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
@@ -36,7 +37,6 @@ import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
 import java.util.logging.Logger;
-import org.bukkit.Material;
 import org.bukkit.block.Sign;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -55,6 +55,7 @@ public class CPFix extends JavaPlugin {
 	boolean vcheck = true;
 	String language = "russian";
 	boolean language_save=false;
+	String system_codepage = "UTF8";
 
 	String cp_from = "ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ¸¨";
 	String cp_to   = "АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдежзийклмнопрстуфхцчшщъыьэюяёЁ";
@@ -75,7 +76,7 @@ public class CPFix extends JavaPlugin {
 	// Input recoding
 	boolean recode_input = false;
 	String cp_console_input = "CP866";
-
+	
 	/* 
 	 * v0.1.0
 	 * 1. Рекод чата из одной кодировки в другую 
@@ -95,6 +96,7 @@ public class CPFix extends JavaPlugin {
 	 * TODO
 	 * Когда будет книжный эвент - перейти на их обработку
 	 * Когда будет эвент на наковальни - фиксить текст в них.
+	 * Автоопределение кодировки сервера и автонастройка под неё
 	 * 
 	 */
 	@Override
@@ -105,8 +107,9 @@ public class CPFix extends JavaPlugin {
 		l = new CPFListener (this);
 		getCommand("cpfix").setExecutor(u);
 		getServer().getPluginManager().registerEvents(l, this);
-
+		
 		setConsoleAndLogCodePage();
+		
 		try {
 			MetricsLite metrics = new MetricsLite(this);
 			metrics.start();
@@ -173,11 +176,11 @@ public class CPFix extends JavaPlugin {
 		fix_names = getConfig().getBoolean("code-page.lore-fix-enable", false);
 		inform_player = getConfig().getBoolean("code-page.inform-player", true);
 		recode_console=getConfig().getBoolean("output-recode.console.enable",false);
-		cp_console = getConfig().getString("output-recode.console.code-page","CP866");
+		cp_console = getConfig().getString("output-recode.console.code-page",getSystemConsoleCodepage());
 		recode_logfile=getConfig().getBoolean("output-recode.server-log.enable",false);
-		cp_logfile=getConfig().getString("output-recode.server-log.code-page","CP866");
+		cp_logfile=getConfig().getString("output-recode.server-log.code-page",getSystemConsoleCodepage());
 		recode_input=getConfig().getBoolean("input-recode.enable",false);
-		cp_console_input=getConfig().getString("input-recode.code-page","CP866");
+		cp_console_input=getConfig().getString("input-recode.code-page",getSystemConsoleCodepage());
 		loadCharFile();
 	}
 
@@ -212,18 +215,15 @@ public class CPFix extends JavaPlugin {
 		item.setItemMeta(im);
 	}
 
-	public void fixBook (ItemStack book){
-		if ((book.getType()!= Material.BOOK_AND_QUILL)&&(book.getType()!= Material.WRITTEN_BOOK)) return;
-		BookMeta bm = (BookMeta) book.getItemMeta();
+	public BookMeta fixBook (BookMeta bm){
 		if (bm.hasAuthor()) bm.setAuthor(recodeText(bm.getAuthor()));
 		if (bm.hasTitle()) bm.setTitle(recodeText (bm.getTitle()));
 		if (bm.hasPages()){
 			List<String> pages = recodeList(bm.getPages());
 			bm.setPages(pages);
 		}
-		book.setItemMeta(bm);
+		return bm;
 	}
-
 
 	public void fixSign (Sign sign){
 		for (int i = 0; i<4; i++)
@@ -239,10 +239,15 @@ public class CPFix extends JavaPlugin {
 				ln.add(recodeText(lines.get(i)));
 		return ln;
 	}
+	
+	// Определение кодировки системной консоли
+	public String getSystemConsoleCodepage(){
+	    if (System.console() != null) system_codepage = SharedSecrets.getJavaIOAccess().charset().name();
+	    return system_codepage;
+	}
 
-
-
-	public String getConsoleCodepage(){
+	// Определение кодировки консоли сервера (по идее работает, только если выставлена принудительно)
+	public String getServerConsoleCodepage(){
 		Logger log = Logger.getLogger("Minecraft");
 		Handler[] hs = log.getParent().getHandlers();
 		try {
@@ -252,6 +257,8 @@ public class CPFix extends JavaPlugin {
 		}
 		return u.getMSGnc("unknown");
 	}
+	
+	// Определение кодировки журнального файла (по идее работает, только если выставлена принудительно)
 	public String getLogCodepage(){
 		Logger log = Logger.getLogger("Minecraft");
 		Handler[] hs = log.getParent().getHandlers();
@@ -262,7 +269,7 @@ public class CPFix extends JavaPlugin {
 		}
 		return u.getMSGnc("unknown");
 	}
-
+	
 	public boolean setConsoleAndLogCodePage(){
 		Logger log = Logger.getLogger("Minecraft");
 		Handler[] hs = log.getParent().getHandlers();
@@ -270,8 +277,8 @@ public class CPFix extends JavaPlugin {
 		if (hs.length==0) return false;
 		try {
 			for (Handler h : hs){
-				if (recode_logfile&&(h instanceof FileHandler)) h.setEncoding(cp_console);
-				else if (recode_console&&(h instanceof ConsoleHandler)) h.setEncoding(cp_logfile);
+				if (recode_logfile&&(h instanceof FileHandler)) h.setEncoding(cp_logfile);
+				else if (recode_console&&(h instanceof ConsoleHandler)) h.setEncoding(cp_console);
 			}
 		} catch (Exception e) {
 			return false;
@@ -286,5 +293,17 @@ public class CPFix extends JavaPlugin {
 		}
 		return str;
 	}
-
+	
+	public void autoConfig(){
+		String cp = getSystemConsoleCodepage();
+		recode_console = true;
+		cp_console = cp;
+		recode_input = true;
+		cp_console_input = cp;
+		if (!recode_logfile){ 
+			cp_logfile = cp;
+			recode_logfile=true;
+		}
+		saveCfg();
+	}
 }

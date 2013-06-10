@@ -31,6 +31,7 @@ import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.event.player.PlayerEditBookEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
@@ -96,12 +97,11 @@ public class CPFListener implements Listener {
 	@EventHandler(priority=EventPriority.LOWEST)
 	public void onItemPickup (PlayerPickupItemEvent event){
 		if (plg.fix_names) plg.fixItemNameAndLore(event.getItem().getItemStack());
-		if (plg.fix_books) plg.fixBook(event.getItem().getItemStack());
 	}
 
 	@EventHandler(priority=EventPriority.LOWEST)
 	public void onOpenInventory (InventoryOpenEvent event){
-		if ((!plg.fix_names)&&(!plg.fix_books)) return;
+		if (!plg.fix_names) return;
 		Inventory inv = event.getInventory();
 		if ((inv == null)||(inv.getSize()==0)) return;
 		try{
@@ -109,7 +109,6 @@ public class CPFListener implements Listener {
 			for (ItemStack item : items){
 				if (item == null) continue;
 				if (plg.fix_names) plg.fixItemNameAndLore(item);
-				if (plg.fix_books) plg.fixBook(item);
 			}
 		} catch (Exception e){
 		}
@@ -119,7 +118,11 @@ public class CPFListener implements Listener {
 	public void onItemInteract (PlayerInteractEvent event){
 		if ((event.getPlayer().getItemInHand()==null)||(event.getPlayer().getItemInHand().getTypeId()==0)) return;
 		if (plg.fix_names) plg.fixItemNameAndLore(event.getPlayer().getItemInHand());
-		if (plg.fix_books) plg.fixBook(event.getPlayer().getItemInHand());
+	}
+	
+	@EventHandler(priority=EventPriority.LOWEST)
+	public void onBookEdit (PlayerEditBookEvent event){
+		if (plg.fix_books) event.setNewBookMeta(plg.fixBook(event.getNewBookMeta()));
 	}
 
 	@EventHandler(priority=EventPriority.LOWEST)

@@ -50,7 +50,8 @@ public class CPFUtil extends FGUtilCore implements CommandExecutor {
 		printMSG(p, "cfg_fixnsignbook",EnDis(plg.fix_sign),EnDis(plg.fix_books));
 		printMSG(p, "cfg_fixnamelore",EnDis(plg.fix_names));
 		printMSG(p, "cfg_inform",EnDis(plg.inform_player));
-		printMSG(p, "cfg_outconsole", EnDis(plg.recode_console),plg.getConsoleCodepage());
+		printMSG(p, "cfg_syscodepage", plg.getSystemConsoleCodepage());
+		printMSG(p, "cfg_outconsole", EnDis(plg.recode_console),plg.getServerConsoleCodepage());
 		printMSG(p, "cfg_outlogfile", EnDis(plg.recode_logfile),plg.getLogCodepage());
 		printMSG(p, "cfg_inconsole", EnDis(plg.recode_input),plg.cp_console_input);
 		
@@ -79,9 +80,11 @@ public class CPFUtil extends FGUtilCore implements CommandExecutor {
 		addMSG ("cfg_inform","Информирование игроков о неверной версии LWJGL: %1%");
 		addMSG ("cfg_permsign","Исправление текста на табличках по клику (персонально)");
 		addMSG ("unknown", "не определена");
+		addMSG ("cfg_syscodepage", "Системная кодировка консоли: %1%");
 		addMSG ("cfg_outconsole", "Перекодирование вывода в консоль: %1% Кодировка: %2%");
 		addMSG ("cfg_outlogfile", "Перекодирование журнального файла: %1% Кодировка: %2%");
 		addMSG ("cfg_inconsole", "Перекодирование ввода в консоли: %1% Кодировка: %2%");
+		addMSG ("msg_autoconfig", "Произведена автоматическая настройка под кодировку консоли %1%. Необходимо перезапустить сервер!");
 	}
 	
 	@Override
@@ -93,6 +96,9 @@ public class CPFUtil extends FGUtilCore implements CommandExecutor {
 			plg.reloadConfig();
 			plg.loadCfg();
 			printMSG(sender, "msg_reloaded");
+		} else if ((args.length==1)&&(args[0].equalsIgnoreCase("auto"))){
+			plg.autoConfig();
+			printMSG(sender, "msg_autoconfig",'e','6',plg.getSystemConsoleCodepage());
 		} else return false;
 		return true;
 	}
