@@ -56,22 +56,24 @@ public class CPFListener implements Listener {
 
 	@EventHandler(priority=EventPriority.LOWEST)
 	public void onRecodeChat (AsyncPlayerChatEvent event){
-		if (!plg.fix_chat) return;
-		String str = plg.recodeText(event.getMessage());
-		if (!str.equals(event.getMessage())){
-			if (plg.inform_player) plg.inform (event.getPlayer());
-			event.setMessage(str);
+		String str = event.getMessage();
+		if (plg.fix_chat) {
+			str = plg.recodeText(str);
+			if (!str.equals(event.getMessage())&&plg.inform_player)	plg.inform (event.getPlayer());
 		}
+		if (plg.wl_char) str = plg.refilterText(str);
+		event.setMessage(str);
 	}
 
 	@EventHandler(priority=EventPriority.LOWEST)
 	public void onRecodeCmd (PlayerCommandPreprocessEvent event){
-		if (!plg.fix_cmd) return;
-		String str = plg.recodeText(event.getMessage());
-		if (!str.equals(event.getMessage())){
-			if (plg.inform_player) plg.inform (event.getPlayer());
-			event.setMessage(str);
+		String str = event.getMessage();
+		if (plg.fix_cmd) {
+			str = plg.recodeText(str);
+			if (!str.equals(event.getMessage())&&plg.inform_player)	plg.inform (event.getPlayer());
 		}
+		if (plg.wl_char) str = plg.refilterText(str);
+		event.setMessage(str);
 	}
 
 	@EventHandler(priority=EventPriority.LOWEST)
@@ -79,7 +81,6 @@ public class CPFListener implements Listener {
 		if (plg.recode_input)
 			event.setCommand(plg.recodeToUTF8(event.getCommand(), plg.cp_console_input));
 	}
-
 
 	@EventHandler(priority=EventPriority.LOWEST)
 	public void onSignChange (SignChangeEvent event){
@@ -134,5 +135,4 @@ public class CPFListener implements Listener {
 		Sign sign = (Sign) event.getClickedBlock().getState();
 		plg.fixSign(sign);
 	}
-
 }

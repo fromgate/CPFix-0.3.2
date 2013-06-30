@@ -54,7 +54,8 @@ public class CPFUtil extends FGUtilCore implements CommandExecutor {
 		printMSG(p, "cfg_outconsole", EnDis(plg.recode_console),plg.getServerConsoleCodepage());
 		printMSG(p, "cfg_outlogfile", EnDis(plg.recode_logfile),plg.getLogCodepage());
 		printMSG(p, "cfg_inconsole", EnDis(plg.recode_input),plg.cp_console_input);
-		
+		printMSG(p, "cfg_wlstate",EnDis(plg.wl_char),plg.wl_replace);
+		printMSG(p, "cfg_whitelist",'a','6',plg.whitelist);
 		if (p instanceof Player) {
 			Player pp = (Player) p;
 			printEnDis (p, "cfg_permsign",pp.hasPermission("cpfix.sign"));
@@ -85,6 +86,8 @@ public class CPFUtil extends FGUtilCore implements CommandExecutor {
 		addMSG ("cfg_outlogfile", "Перекодирование журнального файла: %1% Кодировка: %2%");
 		addMSG ("cfg_inconsole", "Перекодирование ввода в консоли: %1% Кодировка: %2%");
 		addMSG ("msg_autoconfig", "Произведена автоматическая настройка под кодировку консоли %1%. Необходимо перезапустить сервер!");
+		addMSG ("cfg_wlstate", "Фильтр символов: %1% Символ для замены: %2%");
+		addMSG ("cfg_whitelist", "Разрешенные символы: %1%");
 	}
 	
 	@Override

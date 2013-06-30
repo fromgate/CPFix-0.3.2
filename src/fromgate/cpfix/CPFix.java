@@ -56,10 +56,8 @@ public class CPFix extends JavaPlugin {
 	String language = "russian";
 	boolean language_save=false;
 	String system_codepage = "UTF8";
-
 	String cp_from = "ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ¸¨";
 	String cp_to   = "АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдежзийклмнопрстуфхцчшщъыьэюяёЁ";
-
 	boolean fix_chat = true;
 	boolean fix_cmd = true;
 	boolean fix_sign = true;
@@ -72,33 +70,16 @@ public class CPFix extends JavaPlugin {
 	String cp_console = "CP866";
 	boolean recode_logfile=true;
 	String cp_logfile = "CP1251";
-	
+
 	// Input recoding
 	boolean recode_input = false;
 	String cp_console_input = "CP866";
-	
-	/* 
-	 * v0.1.0
-	 * 1. Рекод чата из одной кодировки в другую 
-	 * 1.1 Рекод при вводе команд
-	 * 2. Рекод табличек
-	 * 3. Рекод табличек по клику рукой
-	 * 4. Рекод книг по команде
-	 * 5. Рекод названий предметов -
-	 * 
-	 * v0.2.0
-	 * 1. Выбор кодировки для вывода (консоль, лог)
-	 * 2. Кодировка для вводимого текста (консоль)
-	 * 3. Встроен английский язык
-	 * 4. Наборы символов (правильных и неправильных) выведены в отдельный файл для совместимости с системами, 
-	 *    в которых по умолчанию установлена кодировка отличная от UTF-8 
-	 * 
-	 * TODO
-	 * Когда будет книжный эвент - перейти на их обработку
-	 * Когда будет эвент на наковальни - фиксить текст в них.
-	 * Автоопределение кодировки сервера и автонастройка под неё
-	 * 
-	 */
+
+	// Whitelist characters
+	boolean wl_char = true;
+	String whitelist =" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_¸abcdefghijklmnopqrstuvwxyz{|}~АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЫЭЮЯабвгдеёжзийклмнопрстуфхцчшщъыьэюя";
+	String wl_replace = "_";
+
 	@Override
 	public void onEnable() {
 		loadCfg();
@@ -107,9 +88,9 @@ public class CPFix extends JavaPlugin {
 		l = new CPFListener (this);
 		getCommand("cpfix").setExecutor(u);
 		getServer().getPluginManager().registerEvents(l, this);
-		
+
 		setConsoleAndLogCodePage();
-		
+
 		try {
 			MetricsLite metrics = new MetricsLite(this);
 			metrics.start();
@@ -121,6 +102,9 @@ public class CPFix extends JavaPlugin {
 		getConfig().set("general.check-updates", vcheck);
 		getConfig().set("general.language",language);
 		getConfig().set("general.language-save",language_save);
+		getConfig().set("white-list.enable",wl_char);
+		//getConfig().set("white-list.characters",whitelist);
+		getConfig().set("white-list.replace",wl_replace);
 		getConfig().set("code-page.chat-fix-enable", fix_chat);
 		getConfig().set("code-page.command-fix-enable", fix_cmd);
 		getConfig().set("code-page.sign-fix-enable", fix_sign);
@@ -142,8 +126,12 @@ public class CPFix extends JavaPlugin {
 		if (f.exists()){
 			try {
 				BufferedReader bfr = new BufferedReader(new InputStreamReader (new FileInputStream (f),"UTF8"));
-				cp_from = bfr.readLine(); //first line
-				cp_to = bfr.readLine(); //second line
+				String ln = bfr.readLine(); 
+				if (!ln.isEmpty()) cp_from = ln;
+				ln = bfr.readLine(); //second line
+				if (!ln.isEmpty()) cp_to = ln;
+				ln = bfr.readLine(); // third line
+				if (!ln.isEmpty()) whitelist  = ln;
 				bfr.close();
 			} catch (Exception e) {
 			}
@@ -159,6 +147,7 @@ public class CPFix extends JavaPlugin {
 			BufferedWriter bwr = new BufferedWriter (new OutputStreamWriter (new FileOutputStream (f), "UTF8"));
 			bwr.write(cp_from+"\n");
 			bwr.write(cp_to+"\n");
+			bwr.write(whitelist+"\n");
 			bwr.flush();
 			bwr.close();
 		} catch (Exception e) {
@@ -181,6 +170,8 @@ public class CPFix extends JavaPlugin {
 		cp_logfile=getConfig().getString("output-recode.server-log.code-page",getSystemConsoleCodepage());
 		recode_input=getConfig().getBoolean("input-recode.enable",false);
 		cp_console_input=getConfig().getString("input-recode.code-page",getSystemConsoleCodepage());
+		wl_char = getConfig().getBoolean("white-list.enable",true);
+		wl_replace =getConfig().getString("white-list.replace","_");
 		loadCharFile();
 	}
 
@@ -190,6 +181,15 @@ public class CPFix extends JavaPlugin {
 			for (int i = 0; i<cp_from.length();i++)
 				nstr = nstr.replace(cp_from.charAt(i), cp_to.charAt(i));
 		}
+		return nstr;
+	}
+
+	public String refilterText (String str){
+		if (str.isEmpty()) return str;
+		String nstr = str;
+		for (int i = 0; i<str.length();i++)
+			if (!whitelist.contains(String.valueOf(str.charAt(i))))
+				nstr = nstr.replace(String.valueOf(str.charAt(i)), wl_replace);
 		return nstr;
 	}
 
@@ -239,11 +239,11 @@ public class CPFix extends JavaPlugin {
 				ln.add(recodeText(lines.get(i)));
 		return ln;
 	}
-	
+
 	// Определение кодировки системной консоли
 	public String getSystemConsoleCodepage(){
-	    if (System.console() != null) system_codepage = SharedSecrets.getJavaIOAccess().charset().name();
-	    return system_codepage;
+		if (System.console() != null) system_codepage = SharedSecrets.getJavaIOAccess().charset().name();
+		return system_codepage;
 	}
 
 	// Определение кодировки консоли сервера (по идее работает, только если выставлена принудительно)
@@ -257,7 +257,7 @@ public class CPFix extends JavaPlugin {
 		}
 		return u.getMSGnc("unknown");
 	}
-	
+
 	// Определение кодировки журнального файла (по идее работает, только если выставлена принудительно)
 	public String getLogCodepage(){
 		Logger log = Logger.getLogger("Minecraft");
@@ -269,7 +269,7 @@ public class CPFix extends JavaPlugin {
 		}
 		return u.getMSGnc("unknown");
 	}
-	
+
 	public boolean setConsoleAndLogCodePage(){
 		Logger log = Logger.getLogger("Minecraft");
 		Handler[] hs = log.getParent().getHandlers();
@@ -285,7 +285,7 @@ public class CPFix extends JavaPlugin {
 		}
 		return true;
 	}
-	
+
 	public String recodeToUTF8(String str, String cp){
 		try {
 			return new String (str.getBytes(),cp);
@@ -293,7 +293,7 @@ public class CPFix extends JavaPlugin {
 		}
 		return str;
 	}
-	
+
 	public void autoConfig(){
 		String cp = getSystemConsoleCodepage();
 		recode_console = true;

@@ -1,6 +1,6 @@
 name: CPFix
 main: fromgate.cpfix.CPFix
-version: 0.3.1
+version: 0.3.2
 author: fromgate, fromgate@gmail.com
 commands:
    cpfix:
