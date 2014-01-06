@@ -30,43 +30,43 @@ Configuration
 
 To configure plugin, you must edit config.yml file and type /cpfix reload to reload configuration from the file:
 
-> general:
-> \# Find new of plugin version at BukkitDev
->   check-updates: true
-> \# Language (russian - is default)
->   language: russian
-> \# Save current language to a file
->   language-save: false
-> code-page:
-> \# Enable (true) recoding chat message
->   chat-fix-enable: true
-> \# Enable (true) recoding commands
->   command-fix-enable: true
-> \# Enable (true) recoding signs
->   sign-fix-enable: true
-> \# Enable (true) recoding books
->   book-fix-enable: true
-> \# Enable (true) recoding item's name and lore (Disabled by default)
->   lore-fix-enable: false
-> \# Inform player if he types wrong character at chat or at sign (only once :))
->   inform-player: true
-> \# Recode output console and server.log
-> output-recode:
->   console:
->     enable: true
->     code-page: CP866
->   server-log:
->     enable: true
->     code-page: CP866
-> \# Recode input (console only)
-> input-recode:
->   enable: true
->   code-page: CP866
+    general:
+    # Find new of plugin version at BukkitDev
+      check-updates: true
+    # Language (russian - is default)
+      language: russian
+    # Save current language to a file
+      language-save: false
+    code-page:
+    # Enable (true) recoding chat message
+      chat-fix-enable: true
+    # Enable (true) recoding commands
+      command-fix-enable: true
+    # Enable (true) recoding signs
+      sign-fix-enable: true
+    # Enable (true) recoding books
+      book-fix-enable: true
+    # Enable (true) recoding item's name and lore (Disabled by default)
+      lore-fix-enable: false
+    # Inform player if he types wrong character at chat or at sign (only once :))
+      inform-player: true
+    # Recode output console and server.log
+    output-recode:
+      console:
+        enable: true
+        code-page: CP866
+      server-log:
+        enable: true
+        code-page: CP866
+    # Recode input (console only)
+    input-recode:
+      enable: true
+      code-page: CP866
 
 character.txt file includes charsets containing "wrong" character set and "right" characters set. If typed message contains any wrong symbol (character located at the first line) it will be replaced with character located in "right" character set (second line) in same position. If you don't need to correct Russian symbols, but you going to replace any symbol with another - you use this plugin to do it. Just configure this characters sets. Default character.txt:
 
-> ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ¸¨
-> АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдежзийклмнопрстуфхцчшщъыьэюяёЁ
+    ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ¸¨
+    АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдежзийклмнопрстуфхцчшщъыьэюяёЁ
 
 Permissions
 -----------
